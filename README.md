@@ -1,3 +1,15 @@
+# Add constants.js under src file !! before test or run this project
+constants.js:
+
+export const SAT_API_KEY = "Your_API_KEY";
+
+export const STARLINK_CATEGORY = "52";
+
+export const NEARBY_SATELLITE = "rest/v1/satellite/above";
+
+export const WORLD_MAP_URL = "https://unpkg.com/world-atlas@1/world/110m.json";
+
+
 # Starlink
 This is a visualization dashboard using ReactJS and D3 to track satellites in real-time based on geo-location
 
