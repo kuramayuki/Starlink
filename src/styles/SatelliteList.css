@@ -1,0 +1,21 @@
+.sat-list-box {
+    border: 1px solid #ccc;
+    height: 410px;
+    padding: 20px;
+    margin-top: 10px;
+}
+.btn-container {
+    text-align: center;
+}
+
+.sat-list {
+    height: 310px;
+    overflow: scroll;
+}
+
+.spin-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 335px;
+}
