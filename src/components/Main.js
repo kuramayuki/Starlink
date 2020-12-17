@@ -9,11 +9,12 @@ class Main extends Component {
     state = {
         satInfo: null,
         settings: null,
+        satList: null,
         isLoadingList: false
     }
 
     render() {
-        const {satInfo, isLoadingList} = this.state;
+        const {satInfo, isLoadingList, settings, satList} = this.state;
         return (
             <div className="main">
                 <div className="left-side">
@@ -24,7 +25,8 @@ class Main extends Component {
                     />
                 </div>
                 <div className="right-side">
-                    <WorldMap />
+                    <WorldMap satData={satList} observerData={settings}
+                    />
                 </div>
             </div>
         );
@@ -32,6 +34,10 @@ class Main extends Component {
 
     showMap = (satList) => {
         console.log("show on the map", satList);
+        //setState
+        this.setState({
+                satList: [...satList]
+            })
     }
     showSatellite = setting => {
         console.log('setting -> ', setting);

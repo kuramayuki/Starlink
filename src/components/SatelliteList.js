@@ -75,6 +75,8 @@ class SatelliteList extends Component {
         //      -> item not in the list => do nothing
         //      -> item is in the list => remove item
         const found = list.some( entry => entry.satid === item.satid );
+        //here we use .some not .includes, because includes can not compare object type
+        //but .some will iterate the whole array, and apply comparison logic to each element
         console.log('found ->', found);
         if (status && !found) {
             list = [...list, item];
