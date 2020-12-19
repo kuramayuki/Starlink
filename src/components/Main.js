@@ -9,7 +9,7 @@ class Main extends Component {
     state = {
         satInfo: null,
         settings: null,
-        satList: null,
+        satList: null,//selected satellite info, pass to map for drawing sat
         isLoadingList: false
     }
 
@@ -20,7 +20,7 @@ class Main extends Component {
                 <div className="left-side">
                     <SatSetting onShow={this.showSatellite}/>
                     <SatelliteList satInfo={satInfo}
-                        isLoadingList={isLoadingList}
+                                   isLoadingList={isLoadingList}
                                    onShowMap={this.showMap}
                     />
                 </div>
@@ -34,9 +34,9 @@ class Main extends Component {
 
     showMap = (satList) => {
         console.log("show on the map", satList);
-        //setState
+        //setState, update satList which comes from SatelliteList component
         this.setState({
-                satList: [...satList]
+                satList: [...satList] //new a satList obj and copy latest satList
             })
     }
     showSatellite = setting => {

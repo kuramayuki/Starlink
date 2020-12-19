@@ -25,7 +25,7 @@ class WorldMap extends Component {
         this.refMap = React.createRef();
         this.refTrack = React.createRef();
 
-        this.map = null;
+        this.map = null;//bind canvas with the class WorldMap -> we can use canvas outside generateMap func
         this.color = d3Scale.scaleOrdinal(schemeCategory10);
     }
     componentDidMount() {
@@ -49,6 +49,7 @@ class WorldMap extends Component {
         const canvas = d3Select(this.refMap.current)
             .attr("width", width)
             .attr("height", height);
+        //canvas2 for sat tracking
         const canvas2 = d3Select(this.refTrack.current)
             .attr("width", width)
             .attr("height", height);
@@ -56,6 +57,7 @@ class WorldMap extends Component {
         const context = canvas.node().getContext("2d");
         const context2 = canvas2.node().getContext("2d");
 
+        //drawing map
         let path = geoPath().projection(projection).context(context);
 
         land.forEach(ele => {
@@ -79,6 +81,7 @@ class WorldMap extends Component {
             context.stroke();
         })
 
+        //bind both canvas and canvas2 with class WorldMap
         this.map = {
             context: context,
             context2: context2,
@@ -88,6 +91,8 @@ class WorldMap extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        //compare whether the prev satData(satList) has changed
+        //if changed, we should call backend to get new pos data
         if (prevProps.satData !== this.props.satData) {
             const {latitude,
                 longitude,
@@ -95,7 +100,7 @@ class WorldMap extends Component {
                 altitude,
                 duration
             } = this.props.observerData;
-            // duration amplify 10x
+            // duration amplify 60x
             const endTime = duration * 60;
             //STEP 1: prepare for urls
             const urls = this.props.satData.map(sat=>{
@@ -104,8 +109,8 @@ class WorldMap extends Component {
                 //send ajax call, will return a promise
                 return axios.get(url);
             })
-            console.log(urls);
-            //STEP 2: fetch sats positions, this can also be applied with promise
+            console.log("urls in map -> ", urls);
+            //STEP 2: Parse sats positions, this can be applied with axios and promise
             // axios.all(urls)
             //     .then(
             //         axios.spread((...args)=>{
@@ -119,12 +124,21 @@ class WorldMap extends Component {
             //         console.log("err in fetch satellite position: ", err.message);
             //     })
 
+            //Promise.all will execute all the promises
+            // Promise.all([axios.get(..),axios.get(..)...]).then(...)
+            //the Promise.all execute results will be in order as the order in the [axios.get] input array
             Promise.all(urls)
                 .then(results => {
                     console.log('->', results);
                     const arr = results.map(sat=> sat.data);
                     console.log('arr -> ', arr);
                     //drawing position
+                    this.setState({
+                        isLoading: false,
+                        isDrawing: true
+                    })
+                    //case 1: isDrawing false -> track
+                    //case 2: isDrawing true -> cannot track, give hint
                     if (!prevState.isDrawing) {
                         this.track(arr);
                     } else {
@@ -132,35 +146,36 @@ class WorldMap extends Component {
                         oHint.innerHTML =
                             "Please wait for these satellite animation to finish before selection new ones!";
                     }
-
-
                     }).catch(e=>{
                     console.log('failed ->', e);
                 })
         }
     }
+
     track = data => {
+        //We draw the sat pos just as we draw the world map
+        //Create a new canvas
         //canvas2
         if (!data || !data[0].hasOwnProperty("positions")) {
             throw new Error("no position data");
             return;
         }
 
-        const len = data[0].positions.length;
+        const len = data[0].positions.length;//the total number of positions we got
         const { duration } = this.props.observerData;
         const { context2 } = this.map;
 
         let now = new Date(); //start time
-        let i = 0; // start sat
-
+        let i = 0; // start sat positions
+        //timer: for each second what we will do
         let timer = setInterval(()=>{
-            let ct = new Date();
+            let ct = new Date();//current time, will change as interval is 1 second
             //count the interval time
             let timePassed = i === 0 ? 0 : ct - now;
             let time = new Date(now.getTime() + 60 * timePassed); //amplify 60X
 
             context2.clearRect(0, 0, width, height);
-
+            //show time
             context2.font = "bold 14px sans-serif";
             context2.fillStyle = "#333";
             context2.textAlign = "center";
@@ -168,6 +183,8 @@ class WorldMap extends Component {
 
             if (i >= len) {
                 clearInterval(timer);
+                //when ending drawing, set isDrawing false
+                //and clear Hint
                 this.setState({ isDrawing: false });
                 const oHint = document.getElementsByClassName("hint")[0];
                 oHint.innerHTML = "";
@@ -184,6 +201,7 @@ class WorldMap extends Component {
         },1000)
 
     }
+
     drawSat= (sat, pos) => {
         const { satlongitude, satlatitude } = pos;
 
@@ -191,7 +209,7 @@ class WorldMap extends Component {
         const { satname } = sat;
         const nameWithNumber = satname.match(/\d+/g).join("");//regular expression: only use number
         const { projection, context2 } = this.map;
-        //same as projection in drawing map
+        //projection in map
         const xy = projection([satlongitude, satlatitude]);//generate x y axis
         //generate different color for each sats dynamically via d3 library
         context2.fillStyle = this.color(nameWithNumber);
